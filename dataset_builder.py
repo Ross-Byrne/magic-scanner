@@ -103,7 +103,7 @@ def get_dataset():
     train_ds = keras.utils.image_dataset_from_directory(
         directory='data/mtg-ds/images/',
         # directory='data/test-data/',
-        batch_size=78,
+        batch_size=64,
         seed=123,
         image_size=(image_height, image_width),
         color_mode='grayscale')

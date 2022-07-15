@@ -13,24 +13,32 @@ if __name__ == '__main__':
     train_ds, val_ds, id_to_name_map = dataset_builder.get_dataset()
 
     print(train_ds)
-    class_names = train_ds.class_names
+    print(len(train_ds.class_names))
 
     # plt.figure(figsize=(10, 10))
     # for images, labels in train_ds.take(1):
     #     for i in range(9):
     #         ax = plt.subplot(3, 3, i + 1)
     #         plt.imshow(images[i].numpy().astype("uint8"), cmap='gray', vmin=0, vmax=255)
-    #         plt.title(id_to_name_map[class_names[labels[i]]])
+    #         plt.title(id_to_name_map[train_ds.class_names[labels[i]]])
     #         plt.axis("off")
     #
     #     plt.show()
 
     # Model / data parameters
     num_classes = len(train_ds.class_names)
-    input_shape = (178, 128, 1)
+    # input_shape = (178, 128, 1)
 
     model = tf.keras.Sequential([
         tf.keras.layers.Rescaling(1. / 255),
+
+        tf.keras.layers.Conv2D(64, 3, activation='relu'),
+        tf.keras.layers.Conv2D(64, 3, activation='relu'),
+        tf.keras.layers.Conv2D(64, 3, activation='relu'),
+        tf.keras.layers.MaxPooling2D(),
+        tf.keras.layers.Dropout(0.25),
+
+        tf.keras.layers.Conv2D(64, 3, activation='relu'),
         tf.keras.layers.Conv2D(64, 3, activation='relu'),
         tf.keras.layers.Conv2D(64, 3, activation='relu'),
         tf.keras.layers.MaxPooling2D(),
@@ -38,9 +46,11 @@ if __name__ == '__main__':
 
         tf.keras.layers.Conv2D(128, 3, activation='relu'),
         tf.keras.layers.Conv2D(128, 3, activation='relu'),
+        tf.keras.layers.Conv2D(128, 3, activation='relu'),
         tf.keras.layers.MaxPooling2D(),
         tf.keras.layers.Dropout(0.3),
 
+        tf.keras.layers.Conv2D(256, 3, activation='relu'),
         tf.keras.layers.Conv2D(256, 3, activation='relu'),
         tf.keras.layers.Conv2D(256, 3, activation='relu'),
         tf.keras.layers.MaxPooling2D(),
