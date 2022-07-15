@@ -2,10 +2,15 @@ import os
 import csv
 from PIL import Image
 from tqdm import tqdm
+import tensorflow as tf
+from tensorflow import keras
+from matplotlib import pyplot as plt
 
-idToNameMap = {}
-idToIndexMap = {}
-indexToIdMap = {}
+id_to_name_map = {}
+id_to_index_map = {}
+index_to_id_map = {}
+image_height = 178
+image_width = 128
 
 
 # make new folder to put processed dataset in
@@ -30,9 +35,9 @@ def _create_dataset_labels_csv():
 
         # create id/name mappings
         for line in csv_file:
-            idToNameMap[line[0]] = line[1]
-            idToIndexMap[line[0]] = i
-            indexToIdMap[i] = line[0]
+            id_to_name_map[line[0]] = line[1]
+            id_to_index_map[line[0]] = i
+            index_to_id_map[i] = line[0]
             i += 1
 
     # create dataset label csv
@@ -41,7 +46,7 @@ def _create_dataset_labels_csv():
         # Add csv headers
         csvwriter.writerow(['index', 'uuid'])
 
-        for uuid, index in idToIndexMap.items():
+        for uuid, index in id_to_index_map.items():
             csvwriter.writerow([index, uuid])
 
     # create image name map csv
@@ -50,13 +55,12 @@ def _create_dataset_labels_csv():
         # Add csv headers
         csvwriter.writerow(['uuid', 'name'])
 
-        for uuid, name in idToNameMap.items():
+        for uuid, name in id_to_name_map.items():
             csvwriter.writerow([uuid, name])
 
 
 def _process_images():
     print("Processing images, please wait...")
-    target_width = 128  # should resize images to 128 x 178
 
     # iterate through cards in data directory
     with os.scandir("data/magic-the-gathering-cards") as dirs:
@@ -67,28 +71,54 @@ def _process_images():
                     name = entry.name.split('.')[0]
                     image = Image.open(f"data/magic-the-gathering-cards/{entry.name}")
                     image = image.convert("L")  # convert to grayscale
-                    image_width, image_height = image.size
 
-                    # calculate resize that preserves aspect ratio
-                    ratio = target_width / float(image_width)
-                    new_dimensions = (target_width, int(image_height * ratio))
+                    new_dimensions = (image_width, image_height)
                     image = image.resize(new_dimensions)
 
                     # save processed image
-                    image_label = idToIndexMap[name]
-                    image.save(f'data/mtg-ds/images/{image_label}.jpg')
+                    # image_label = idToIndexMap[name]
+
+                    # create folder for class name
+                    if not os.path.exists(f'data/mtg-ds/images/{name}'):
+                        os.makedirs(f'data/mtg-ds/images/{name}')
+
+                    image.save(f'data/mtg-ds/images/{name}/0.jpg')  # save image as index 0 for now
                 except OSError as e:  # if failed, report it back to the user
                     print("Error: %s - %s." % (entry.name, e.strerror))
 
-# load files into dataset object
-# preprocess dataset
+
+def _initialise_builder():
+    _ensure_folder_structure()
+    _create_dataset_labels_csv()
+
+
+def process_dataset():
+    _initialise_builder()
+    _process_images()
 
 
 def get_dataset():
-    _ensure_folder_structure()
-    _create_dataset_labels_csv()
-    _process_images()
-    return 'dataset here'
+    _initialise_builder()
+
+    train_ds = keras.utils.image_dataset_from_directory(
+        directory='data/mtg-ds/images/',
+        # directory='data/test-data/',
+        batch_size=78,
+        seed=123,
+        image_size=(image_height, image_width),
+        color_mode='grayscale')
+
+    # val_ds = keras.utils.image_dataset_from_directory(
+    #     directory='data/mtg-ds/images/',
+    #     # directory='data/test-data/',
+    #     validation_split=0.2,
+    #     subset="validation",
+    #     batch_size=132,
+    #     seed=123,
+    #     image_size=(image_height, image_width),
+    #     color_mode='grayscale')
+
+    return train_ds, None, id_to_name_map
 
 
 if __name__ == '__main__':

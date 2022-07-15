@@ -1,6 +1,7 @@
 numpy~=1.22.3
 pandas
 tensorflow-gpu~=2.9.1
+tensorflow_datasets
 keras
 matplotlib~=3.5.1
 pillow~=9.0.1
