@@ -1,5 +1,6 @@
 import numpy as np
 import tensorflow as tf
+import os
 from tensorflow import keras
 from matplotlib import pyplot as plt
 import csv
@@ -70,9 +71,14 @@ if __name__ == '__main__':
     model.fit(
         train_ds,
         validation_data=train_ds,
-        epochs=10
+        epochs=5
     )
 
     test_loss, test_acc = model.evaluate(train_ds, verbose=2)
+
+    if not os.path.exists('models/'):
+        os.makedirs('models/')
+
+    model.save('models/first-test.h5')
 
     print('\nTest accuracy:', test_acc)
